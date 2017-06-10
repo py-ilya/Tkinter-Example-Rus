@@ -22,4 +22,4 @@ root.mainloop()
 ```
 
 ### Пример программы по окнончанию курса
-![Screen](./Picture/Editor.png)
+![Screen](./Pictures/Editor.png)
