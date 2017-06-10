@@ -20,3 +20,6 @@ root.geometry('200x150+300+225')
 # вывод окна на экран
 root.mainloop()
 ```
+
+### Пример программы по окнончанию курса
+![Screen](./Picture/Editor.png)
