@@ -1,4 +1,4 @@
-# tkinter-example-rus
+# Tkinter-Example-Rus
 Простой пример текстового редактора при помощи tkinter Python3. 
 Полностью на русском языке. 
 
@@ -10,7 +10,7 @@ On Russian language.
 # -*- coding: utf-8 -*-
 
 # импортирование модулей python
-from Tkinter import *
+from tkinter import *
 
 #создание окна
 root = Tk()
