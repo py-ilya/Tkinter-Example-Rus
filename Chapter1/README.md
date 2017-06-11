@@ -207,3 +207,553 @@ self.button.pack(side = BOTTOM)
 
 
 Между прочим, эта кнопка пока ничего не делает. Итак, запускаем [window_04.py](./window_04.py) и нажимаем бесполезную кнопку...
+
+# Методы
+```py
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+# импортирование модулей python
+from tkinter import *
+
+# класс главного окна
+class main:
+  def __init__(self, master):
+    self.master = master
+    self.master.title('parent')
+    self.master.geometry('200x150+300+225')
+    self.button = Button(self.master,
+                         text = 'myButton',
+                         command = self.openDialog)
+    self.button.pack(side = BOTTOM)
+    self.master.mainloop()
+
+  def openDialog(self):
+    child(self.master)
+
+# класс дочерних окон
+class child:
+  def __init__(self, master):
+    self.slave = Toplevel(master)
+    self.slave.title('child')
+    self.slave.geometry('200x150+500+375')
+
+# создание окна
+root = Tk()
+
+# запуск окна
+main(root)
+```
+Любая кнопка должна что-нибудь делать. В данном случае мы свяжем событие "нажатие кнопки" с открытием дочернего окна из одного из прошлых примеров. Для этого в класс main вводится метод openDialog, который создает экземпляр объекта child.
+```py
+ def openDialog(self):
+   child(self.master)
+```
+Для определения метода openDialog не нужна функция __init__(). Не создается экземпляра метода, - но метод создает экземпляр объекта child. Метод - это то, что класс main делает, а не то, чем класс main является...
+```py
+command = self.openDialog
+```
+Обращение к openDialog содержит вездесущее self. Это означает, что метод openDialog является внутренним по отношению к main.
+ ```py
+# класс дочерних окон
+class child:
+  def __init__(self, master):
+    self.slave = Toplevel(master)
+ ```
+Toplevel() из класса child узнает о том, что относится к дочернему классу класса main, довольно мучительным путем. Tk(), связанный с root, передается классу main через параметр master [в main], а затем пересылается другому параметру master [в child]. Всякий класс имеет свою переменную master, локальную по отношению к данному классу. Их имена могут быть различными.
+Ага! Метод. Запускаем [window_05.py](./window_05.py) и испытываем работающую кнопку...
+
+# Модальное дочернее окно
+```py
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+# импортирование модулей python
+from tkinter import *
+
+# класс главного окна
+class main:
+  def __init__(self, master):
+    self.master = master
+    self.master.title('parent')
+    self.master.geometry('200x150+300+225')
+    self.button = Button(self.master,
+                         text = 'myButton',
+                         command = self.openDialog)
+    self.button.pack(side = BOTTOM)
+    self.master.mainloop()
+
+  def openDialog(self):
+    child(self.master)
+
+# класс дочерних окон
+class child:
+  def __init__(self, master):
+    self.slave = Toplevel(master)
+    self.slave.title('child')
+    self.slave.geometry('200x150+500+375')
+    self.slave.grab_set()
+    self.slave.focus_set()
+    self.slave.wait_window()
+
+# создание окна
+root = Tk()
+
+# запуск окна
+main(root)
+```
+В некоторых программах требуется для вывода информации создать дочернее окно, продолжая в тоже время использовать главное. При этом часто бывает нужно, чтобы все процессы, происходящие в дочернем окне, завершились до того, как вы продолжите работу. Такое окно называют модальным. Это значит, что оно будет удерживать фокус пока не будет закрыто. В Python дочернее окно можно превратить в модальное с помощью трех методов Toplevel():
+```py
+ self.slave.grab_set()
+ ```
+child перехватывает все события, происходящие в приложении.
+```py
+ self.slave.focus_set()
+ ```
+child захватывает фокус.
+```py
+ self.slave.wait_window()
+ ```
+child ждет, когда будет уничтожен текущий объект, не возобновляя работы [но и не оказывая влияния на основной цикл].
+
+Итак, рецепт. Если нужно создать модальное окно, воспользуйтесь этими тремя методами. Как говорится, "Просто сделай это!" [window_06.py](./window_06.py)
+
+# Отсылка сообщения от родительского элемента к дочернему
+```py
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+# импортирование модулей python
+from tkinter import *
+
+# класс главного окна
+class main:
+  def __init__(self, master):
+    self.master = master
+    self.master.title('parent')
+    self.master.geometry('200x150+300+225')
+    self.button = Button(self.master,
+                         text = 'myButton',
+                         command = self.openDialog)
+    self.button.pack(side = BOTTOM)
+    self.text = Text(self.master,
+                     background = 'white')
+    self.text.pack(side = TOP,
+                   fill = BOTH,
+                   expand = YES)
+    self.master.mainloop()
+
+  def openDialog(self):
+    child(self.master, self.text.get('0.0', END))
+
+# класс дочерних окон
+class child:
+  def __init__(self, master, myText = ''):
+    self.slave = Toplevel(master)
+    self.slave.title('child')
+    self.slave.geometry('200x150+500+375')
+    self.text = Text(self.slave,
+                     background = 'white')
+    self.text.pack(side = TOP,
+                   fill = BOTH,
+                   expand = YES)
+    self.text.insert('0.0', myText)
+    self.slave.grab_set()
+    self.slave.focus_set()
+    self.slave.wait_window()
+
+# создание окна
+root = Tk()
+
+# запуск окна
+main(root) 
+```
+          
+Модальные дочерние окна используются, главным образом, в роли диалоговых окон. Нам нужен способ передачи информации от родительского окна к дочернему и наоборот. Сперва пойдем от main к child. В данный пример внесено три добавления по сравнению с предыдущими:
+Поле для ввода текста в классе main.
+Текстовое окно в классе child для отображения введенной информации.
+Механизм передачи информации от текстового окна в main текстовому окну в child.
+```py 
+self.text = Text(self.master, background = 'white')
+self.text.pack(side = TOP, fill = BOTH, expand = YES)
+```
+Стоит создать один элемент управления, как все остальное становится ясно. Единственно стоит отметить, что элемент управления text имеет свойство background (фон) со значением 'white' (белый) и что пришло время поговорить о pack. Метод pack() размещает в окне элемент управления. Итак:
+side (сторона) определяет, какой стороны окна будет "держаться" элемент управления
+варианты: TOP (сверху) RIGHT (справа) LEFT (слева) BOTTOM (снизу)
+по умолчанию: NONE (никак)
+fill (заполнение) показывает, заполнит элемент доступное пространство или нет.
+варианты: X Y BOTH (X Y оба)
+по умолчанию: NONE (никак)
+expand (растяжение) указывает, будет ли элемент управления менять свой размер при изменении размеров окна.
+варианты: YES (да)
+по умолчанию: 0
+```py 
+def openDialog(self):
+  child(self.master, self.text.get('0.0', END))
+```
+В метод openDialog() мы ввели инструкцию self.text.get('0.0', END), которая является методом элемента управления Text. Она собирает все содержимое текстового окна от строки 0 символа 0 и до конца, чтобы передать его классу/окну child [как myText].
+```py 
+# класс дочерних окон
+class child:
+  def __init__(self, master, myText = ''):
+    ...
+    self.text = Text(self.slave,
+                     background = 'white')
+    self.text.pack(side = TOP,
+                   fill = BOTH,
+                   expand = YES)
+    self.text.insert('0.0', myText)
+```
+Как работает текстовый элемент управления child интуитивно ясно. Он заполняется текстом из главного окна посредством def __init__(self, master, myText = ''). Информация из myText вставляется в элемент управления text с помощью метода self.text.insert('0.0', myText), который помещает ее, начиная со строки 0 символа 0. Испытайте [window_07.py](./window_07.py), напечатав в нем какой-нибудь текст и отослав его...
+
+Общение - хорошая штука, но оно должно быть улицей с двухсторонним движением...
+
+# Отсылка сообщений в обоих направлениях
+```py
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+# импортирование модулей python
+from tkinter import *
+
+# класс главного окна
+class main:
+  def __init__(self, master):
+    self.master = master
+    self.master.title('parent')
+    self.master.geometry('200x150+300+225')
+    self.button = Button(self.master,
+                         text = 'dialog',
+                         command = self.openDialog)
+    self.button.pack(side = BOTTOM)
+    self.text = Text(self.master,
+                     background = 'white')
+    self.text.pack(side = TOP,
+                   fill = BOTH,
+                   expand = YES)
+    self.master.mainloop()
+
+  def openDialog(self):
+    self.dialog = child(self.master)
+    self.sendValue = self.text.get('0.0', END)
+    self.returnValue = self.dialog.go(self.sendValue)
+    if self.returnValue:
+      self.text.delete('0.0', END)
+      self.text.insert('0.0', self.returnValue)
+
+# класс дочернего окна
+class child:
+  def __init__(self, master):
+    self.slave = Toplevel(master)
+    self.slave.title('child')
+    self.slave.geometry('200x150+500+375')
+    self.button = Button(self.slave,
+                         text = 'accept',
+                         command = self.accept)
+    self.button.pack(side = BOTTOM)
+    self.text = Text(self.slave,
+                     background = 'white')
+    self.text.pack(side = TOP,
+                   fill = BOTH,
+                   expand = YES)
+
+  def go(self, myText = ''):
+    self.text.insert('0.0', myText)
+    self.newValue = None
+    self.slave.grab_set()
+    self.slave.focus_set()
+    self.slave.wait_window()
+    return self.newValue
+
+  def accept(self):
+    self.newValue = self.text.get('0.0', END)
+    self.slave.destroy()
+
+# создание окна
+root = Tk()
+
+# запуск окна
+main(root) 
+```
+Мы хотим, чтобы информация шла от родительского окна к дочернему И от дочернего к родительскому. Последнего можно добиться, добавив к дочернему окну кнопку accept и метод для регистрации всех изменений, произведенных в передаваемом тексте; также введем метод go как для создания экземпляра дочернего окна, так и для управления процессом обмена информацией. Такое применение методов [go] для открытия дочерних окон - полезный инструмент, который приобретет особую важность, когда мы будем иметь дело с более сложными операциями в последующих руководствах. Сейчас же он создает пустую переменную newValue, в которую будет записан измененный текст [если он был изменен].
+```py 
+# класс дочернего окна
+class child:
+  def __init__(self, master):
+    ...
+    self.button = Button(self.slave,
+                         text = 'accept',
+                         command = self.accept)
+    self.button.pack(side = BOTTOM)
+    ...
+
+  def go(self, myText = ''):
+    self.text.insert('0.0', myText)
+    self.newValue = None
+    self.slave.grab_set()
+    self.slave.focus_set()
+    self.slave.wait_window()
+    return self.newValue
+
+  def accept(self):
+    self.newValue = self.text.get('0.0', END)
+    self.slave.destroy()
+```
+При вызове дочернего метода go введенный текст вставляется в дочернее текстовое окно. Если текст редактировался и пользователь нажимает кнопку accept, исправленный текст возвращается как newValue. Если дочернее окно просто закрывается, newValue возвращается с пустым значением.
+
+```py 
+  def openDialog(self):
+    self.dialog = child(self.master)
+    self.sendValue = self.text.get('0.0', END)
+    self.returnValue = self.dialog.go(self.sendValue)
+    if self.returnValue:
+      self.text.delete('0.0', END)
+      self.text.insert('0.0', self.returnValue)
+```
+При возврате метод openDialog класса main осуществляет проверку. Если возвращаемая строка не пустая, возвращаемый текст будет вставлен в текстовое окно main.
+
+Запускаем [window_08.py](./window_08.py). Убедитесь, что вы "уловили", как работает go. Нам придется еще довольно много иметь дело с этим методом...
+
+# Усложнение диалогов
+```py
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+# импортирование модулей python
+from tkinter import *
+
+# класс главного окна
+class main:
+  def __init__(self, master):
+    self.master = master
+    self.master.title('parent')
+    self.master.geometry('400x300+200+150')
+    self.button = Button(self.master,
+                         text = 'dialog',
+                         command = self.openDialog)
+    self.button.pack(side = BOTTOM)
+    self.text = Text(self.master,
+                     background = 'white')
+    self.text.pack(side = TOP,
+                   fill = BOTH,
+                   expand = YES)
+    self.master.protocol('WM_DELETE_WINDOW', 
+                         self.exitMethod)
+    self.master.mainloop()
+
+  def openDialog(self):
+    self.dialog = child(self.master)
+    self.sendValue = self.text.get('0.0', END)
+    self.returnValue = self.dialog.go(self.sendValue)
+    if self.returnValue:
+      self.text.delete('0.0', END)
+      self.text.insert('0.0', self.returnValue)
+
+  def exitMethod(self):
+    self.dialog = yesno(self.master)
+    self.returnValue = self.dialog.go('question',
+                                      'Do you want to exit?')
+    if self.returnValue:
+      self.master.destroy()
+
+# класс дочернего окна
+class child:
+  def __init__(self, master):
+    self.slave = Toplevel(master)
+    self.slave.title('child')
+    self.slave.geometry('200x150+500+375')
+    self.frame = Frame(self.slave)
+    self.frame.pack(side = BOTTOM)
+    self.accept_button = Button(self.frame,
+                                text = 'accept',
+                                command = self.accept)
+    self.accept_button.pack(side = LEFT)
+    self.cancel_button = Button(self.frame,
+                                text = 'cancel',
+                                command = self.cancel)
+    self.cancel_button.pack(side = RIGHT)
+    self.text = Text(self.slave, background = 'white')
+    self.text.pack(side = TOP, fill = BOTH, expand = YES)
+    self.slave.protocol('WM_DELETE_WINDOW', self.cancel)
+
+  def go(self, myText = ''):
+    self.text.insert('0.0', myText)
+    self.newValue = None
+    self.slave.grab_set()
+    self.slave.focus_set()
+    self.slave.wait_window()
+    return self.newValue
+
+  def accept(self):
+    self.newValue = self.text.get('0.0', END)
+    self.slave.destroy()
+
+  def cancel(self):
+    self.slave.destroy()
+
+# класс диалогового окна выхода
+class yesno:
+  def __init__(self, master):
+    self.slave = Toplevel(master)
+    self.slave.title('exit dialog')
+    self.slave.geometry('200x100+300+250')
+    self.frame = Frame(self.slave)
+    self.frame.pack(side = BOTTOM)
+    self.yes_button = Button(self.frame,
+                             text = 'yes',
+                             command = self.yes)
+    self.yes_button.pack(side = LEFT)
+    self.no_button = Button(self.frame,
+                            text = 'no',
+                            command = self.no)
+    self.no_button.pack(side = RIGHT)
+    self.label = Label(self.slave)
+    self.label.pack(side = TOP, fill = BOTH, expand = YES)
+    self.slave.protocol('WM_DELETE_WINDOW', self.no)
+
+  def go(self, title = '', message = ''):
+    self.slave.title(title)
+    self.label.configure(text = message)
+    self.booleanValue = TRUE
+    self.slave.grab_set()
+    self.slave.focus_set()
+    self.slave.wait_window()
+    return self.booleanValue
+
+  def yes(self):
+    self.booleanValue = TRUE
+    self.slave.destroy()
+
+  def no(self):
+    self.booleanValue = FALSE
+    self.slave.destroy()
+
+# создание окна
+root = Tk()
+
+# запуск окна
+main(root) 
+```          
+Мы приближаемся к концу начала. Рассмотрим еще несколько приемов, которые будут использоваться позднее в "реальном" приложении: кнопки принятия (accept) и отмены (cancel), а также "перехват" закрытия основного окна с соответствующим диалогом.
+```py
+class child:
+  def __init__(self, master):
+    ...
+    self.frame = Frame(self.slave)
+    self.frame.pack(side = BOTTOM)
+    self.accept_button = Button(self.frame,
+                                text = 'accept',
+                                command = self.accept)
+    self.accept_button.pack(side = LEFT)
+    self.cancel_button = Button(self.frame,
+                                text = 'cancel',
+                                command = self.cancel)
+    self.cancel_button.pack(side = RIGHT)
+    ...
+
+  def accept(self):
+    self.newValue = self.text.get('0.0', END)
+    self.slave.destroy()
+
+  def cancel(self):
+    self.slave.destroy()
+```
+Пока все просто. Размещение в дочерних диалоговых окнах кнопки отмены (cancel) - довольно стандартный прием. При этом происходит уничтожение дочернего окна без изменения newValue.
+```py 
+# класс главного окна
+class main:
+  def __init__(self, master):
+    ...
+    self.master.protocol('WM_DELETE_WINDOW', self.exitMethod)
+    ...
+
+  def exitMethod(self):
+    self.dialog = yesno(self.master)
+    self.returnValue = self.dialog.go('question', 'Do you want to exit?')
+    if self.returnValue:
+      self.master.destroy()
+
+    ...
+
+# класс диалогового окна выхода
+class yesno:
+  def __init__(self, master):
+    self.slave = Toplevel(master)
+    self.slave.title('exit dialog')
+    self.slave.geometry('200x100+300+250')
+    self.frame = Frame(self.slave)
+    self.frame.pack(side = BOTTOM)
+    self.yes_button = Button(self.frame,
+                             text = 'yes',
+                             command = self.yes)
+    self.yes_button.pack(side = LEFT)
+    self.no_button = Button(self.frame,
+                            text = 'no',
+                            command = self.no)
+    self.no_button.pack(side = RIGHT)
+    self.label = Label(self.slave)
+    self.label.pack(side = TOP, fill = BOTH, expand = YES)
+    self.slave.protocol('WM_DELETE_WINDOW', self.no)
+
+  def go(self, title = '', message = ''):
+    self.slave.title(title)
+    self.label.configure(text = message)
+    self.booleanValue = TRUE
+    self.slave.grab_set()
+    self.slave.focus_set()
+    self.slave.wait_window()
+    return self.booleanValue
+
+  def yes(self):
+    self.booleanValue = TRUE
+    self.slave.destroy()
+
+  def no(self):
+    self.booleanValue = FALSE
+    self.slave.destroy()
+```
+"Перехват" закрытия пользователем главного окна немного сложнее. Для чего это может потребоваться? Допустим, в случае текстового редактора нам бы хотелось фиксировать ситуации, когда не был сохранен измененный файл, чтобы предохранить пользователя от нечаянного уничтожения плодов всех его усилий из-за преждевременного закрытия окна.
+
+Секрет спрятался в строке self.master.protocol('WM_DELETE_WINDOW', self.exitMethod). WM_DELETE_WINDOW - это часть оконного протокола, которая обычно бывает связана с self.destroy(). Но в данной строке вместо этого она связывается с одним из разработанных нами методов. Итак, взгляните на def exitMethod(self): здесь вызывается message и выход происходит, только если message (сообщение) равно TRUE (ИСТИНА). message управляется целым новым классом yesno, обладающим своим собственным методом go [Я предупреждал, что go еще пригодится.].
+
+Запустите [window_09.py](./window_09.py), чтобы увидеть нашу программу в действии.
+
+# Святой Грааль
+
+Наша программа растет. У нас получается. И что еще более важно, ее части возможно использовать повторно. Класс yesno может быть применен еще раз в этом же приложении или даже в будущих приложениях. Итак, в коде, приводимом ниже, мы разбиваем программу на три отдельных модуля, которые будут храниться в трех отдельных автономных файлах.
+Основной файл [myWindow.py](./myWindow.py) использует классы dialog и yesno так же, как и раньше, но, вместо того чтобы включить их в код, они импортируются из других файлов - [myDialog.py](./myDialog.py) и [myBoolean.py](./myBoolean.py).
+
+Просмотрите завершающие части файлов [myDialog.py](./myDialog.py) и [myBoolean.py](./myBoolean.py). Там есть тестовая команда. Включать подобную команду в конец любого файла, который не выполняется напрямую, - стандартное правило. С помощью оператора if __name__ == '__main__': она проверяет, запущен файл из другой программы или сам по себе. В последнем случае открывается пустое окно, которое затем убирается с экрана командой root.withdraw(). Но именно к этому фиктивному окну привязывается рабочий код, позволяющий запускать данный файл. Это очень полезный инструмент для отладки. Использование тестов приводит к тому, что все модули становятся "исполняемыми".
+
+Итак, запустим все три файла - [myWindow.py](./myWindow.py), [myDialog.py](./myDialog.py), [myBoolean.py](./myBoolean.py) - и посмотрим, что произойдет.
+           
+# Мини-руководство по Tkinter
+
+Программа, которую мы составили, не сильно впечатляет - что-то вроде импровизации на тему "Hello World!". Предыдущая страница была названа "святым граалем" по двум причинам. Прежде всего, Python никак не связан со змеей. Это название взято из известного сериала Monty Python and the Quest for the Holy Grail. Кроме того, в легенде о Граале рассказывается о том, как нечто искали повсюду, и, когда, наконец, оно было найдено, оказалось, что ищущий обладал им с самого начала.
+Это учебное руководство было написано пять или шесть лет тому назад. Тогда оно не было опубликовано, поскольку я посчитал его слишком примитивным. Позднее это руководство выручило меня самого, облегчив вспоминание Tkinter. Сейчас я сознаю, что оно уже содержало все необходимые идеи, чтобы начать использовать Tkinter для интересующих меня задач. Если вы похожи на меня, то будете применять Python для написания различных утилит, которые часто бывают полезны в повседневной жизни. Это превосходный язык для таких целей [а Tkinter - почти совершенный GUI]. Но для создания коммерческих мегапрограмм, чтобы заработать много денег, ни Python, ни Tkinter не годятся. [Как, впрочем, и само программирование в целом. Лучше идите учиться на менеджера!].
+
+Перечислим элементы управления, с которыми мы уже успели познакомиться, вместе с их свойствами и методами, использованными в примерах. Общий стиль Tkinter - это размещение свойств внутри круглых скобок:
+      Имя_класса(свойство1 = значение1, свойство2 = значение2)
+и использование методов в роли особых "точечных" команд:
+      Имя_класса.метод(параметры)
+
+Класс	Свойства	Методы
+Tk()	 	 
+Toplevel()	parent	title(string)
+geometry(string)
+mainloop()
+destroy()
+Button()	parent
+text = string
+command = method	pack(side)
+Text()	parent	pack(side, fill, expand)
+insert(index, string)
+get(index1, index2)
+delete(index1, index2)
+Label()	parent	configure(text = string
+pack(side, fill, expand)
+Frame()	parent	pack(side, fill)
+
+Мы уже извлекли из этой демонстрационной программы всю пользу, какую только можно было. Настало время заняться созданием "настоящей программы" [более крупного "Hello World!] - на этот раз - текстового редактора. В ходе работы мы повстречаемся с новыми элементами управления: линейками прокрутки, линейками меню и кнопками меню, выпадающими списками, кнопками-флажками и т.п. Приятный сюрприз: за исключением пары ухищрений вы уже умеете пользоваться ими. Цель нового проекта - разработка работающего текстового редактора [если хотите его испытать, запустите editor.py]. Это учебное руководство посвящено только Tkinter, а не всему Python. Таким образом, хотя в предлагаемом вашему вниманию коде будут программные функции, реализованные на Python, обсуждение будет сфокусировано преимущественно на интерфейсе Tkinter. И снова вы будете удивлены. Даже если вы никогда раньше не работали с Python, подавляющая часть кода будет понятной.
+
+Итак, пришло время переходить к следующей части руководства.
